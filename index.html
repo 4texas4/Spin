@@ -12,18 +12,48 @@
   }
   body {
     display: flex;
+    flex-direction: column; /* stacked so title appears above carousel */
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     background: url('../img/pexels-eberhard-grossgasteiger-1421903.jpg');
     background-size: cover;
+    gap: 8px; /* small space between title and carousel */
+    padding: 24px; /* safe spacing on small screens */
   }
+
+  /* Title styles */
+  .title {
+    position: relative;
+    z-index: 1000; /* keep it above the carousel */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #000; /* black text as requested */
+    text-align: center;
+    line-height: 1.05;
+    margin-bottom: 22px; /* push carousel down so title sits higher */
+    transform: translateY(-4px); /* tiny upward nudge */
+  }
+
+  .subtitle {
+    position: relative;
+    z-index: 1000;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    font-size: 1rem;
+    color: #000; /* black text */
+    text-align: center;
+    margin-top: 4px;
+    margin-bottom: 18px; /* extra space before carousel */
+  }
+
   .box {
     position: relative;
     width: 200px;
     height: 300px;
     transform-style: preserve-3d;
     animation: animate 20s linear infinite;
+    z-index: 1; /* keep carousel under the title */
   }
   @keyframes animate {
     0% {
@@ -52,9 +82,24 @@
     height: 100%;
     object-fit: cover;
   }
+
+  /* Make sure the title doesn't blow up on tiny screens */
+  @media (max-width: 420px) {
+    .title {
+      font-size: 1.6rem;
+      margin-bottom: 14px;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+  }
 </style>
 </head>
 <body>
+  <div class="title">Welcome To The Shop.</div>
+  <div class="subtitle">We are located at locker B74</div>
+
   <div class="box">
     <span style="--i:1;"><img src="bloxiade.png" alt=""></span>
     <span style="--i:2;"><img src="cheeseburger.png" alt=""></span>
