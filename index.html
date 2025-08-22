@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>3D Carousel — Lower Sensitivity</title>
+<title>3D Carousel — Images 200x300</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html,body { height:100%; }
@@ -46,10 +46,11 @@
     padding-bottom: 32px;
   }
 
+  /* box is now sized to match the 200x300 images plus extra room (340px height) */
   .box {
     position: relative;
-    width: 260px;
-    height: 360px;
+    width: 200px;      /* matches image width exactly */
+    height: 340px;     /* a little taller so images have breathing room */
     transform-style: preserve-3d;
     will-change: transform;
     touch-action: pan-y; /* allow vertical page scroll */
@@ -60,21 +61,29 @@
   .box span {
     position: absolute;
     top: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transform-origin: center;
     transform-style: preserve-3d;
     -webkit-box-reflect: below 0px linear-gradient(transparent, transparent, transparent, #0004);
     transition: transform 300ms linear;
   }
 
+  /* IMAGES are exactly 200x300 — transparency preserved */
   .box span img {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 200px;
+    height: 300px;
     object-fit: cover;
     border-radius: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-    background: transparent; /* preserve PNG transparency */
+    background: transparent;
+    display: block;
+    -webkit-user-drag: none;
+    user-select: none;
+    pointer-events: none;
   }
 
   .overlay {
@@ -105,7 +114,8 @@
   @media (max-width: 420px) {
     .title { font-size: 1.6rem; }
     .subtitle { font-size: 0.9rem; }
-    .box { width: 200px; height: 280px; }
+    .box { width: 160px; height: 280px; } /* scale down on tiny screens */
+    .box span img { width: 160px; height: 240px; }
     .overlay .hand { width: 120px; height: 120px; }
   }
 </style>
@@ -138,22 +148,17 @@
 
 <script>
 /*
- Behavior:
+ Behavior retained:
  - Hold: follow pointer (rotation stops auto).
- - Release while moving: keep release speed, decelerate to stop, wait 1.5s, then accelerate back to auto-rotation.
- - Release without moving: stay stopped, wait 1.5s, then accelerate back to auto-rotation.
- - Any pointerdown cancels timers/accel and returns control immediately.
+ - Release while moving: continue at released speed, decelerate to stop, wait 1.5s, then accelerate to auto.
+ - Release without moving: stay stopped, wait 1.5s, then accelerate to auto.
+ - Sensitivity remains lowered (0.32 deg/pixel).
 */
 
-/* CONFIG */
 const defaultFullRotationSeconds = 20; // 360deg in this many seconds
 const defaultSpeed = 360 / defaultFullRotationSeconds; // deg/sec
 const radiusZ = 420;
-
-// LOWERED SENSITIVITY: degrees rotated per pixel of pointer movement while dragging.
-// Previously 0.6 — lowered to 0.32 so swipes are noticeably less sensitive.
-const dragDegPerPixel = 0.32;
-
+const dragDegPerPixel = 0.32;       // LOWERED sensitivity you already picked
 const resumeDelayMs = 1500;        // 1.5 seconds wait before resuming auto-rotation
 const decelRate = 3.5;             // exponential decay rate (higher = faster decel)
 const stopThreshold = 0.6;         // deg/sec considered "stopped"
@@ -165,7 +170,7 @@ const carouselWrap = document.getElementById('carouselWrap');
 const overlay = document.getElementById('overlay');
 const handGif = document.getElementById('handGif');
 
-/* layout */
+/* layout: positions items in 3D ring */
 function layoutItems() {
   const spans = box.querySelectorAll('span');
   const count = spans.length;
@@ -179,15 +184,13 @@ layoutItems();
 
 /* STATE */
 let rotation = 0;
-let rotationSpeed = defaultSpeed;  // deg/sec (auto-rotation when >0)
+let rotationSpeed = defaultSpeed;
 let lastFrameTs = null;
-
 let isPointerDown = false;
 let lastPointerX = 0;
 let lastPointerTime = 0;
 let lastDx = 0;
 let lastDt = 0;
-
 let resumeTimer = null;
 let isDecelerating = false;
 let isAccelerating = false;
@@ -199,11 +202,8 @@ function raf(ts) {
   const dt = (ts - lastFrameTs) / 1000;
   lastFrameTs = ts;
 
-  // handle deceleration (after releasing with velocity)
   if (isDecelerating && !isPointerDown) {
-    // exponential decay toward 0
     rotationSpeed *= Math.exp(-decelRate * dt);
-    // if nearly stopped, finish decel
     if (Math.abs(rotationSpeed) <= stopThreshold) {
       rotationSpeed = 0;
       isDecelerating = false;
@@ -211,19 +211,14 @@ function raf(ts) {
     }
   }
 
-  // handle acceleration towards defaultSpeed (after resume delay)
   if (isAccelerating && !isPointerDown) {
     const elapsed = ts - accelStartTs;
     const t = Math.min(1, elapsed / accelDurationMs);
-    // smooth ease (easeOut-ish)
     const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
     rotationSpeed = defaultSpeed * ease;
-    if (t >= 1) {
-      isAccelerating = false;
-    }
+    if (t >= 1) isAccelerating = false;
   }
 
-  // integrate rotation
   rotation += rotationSpeed * dt;
   rotation %= 360;
   box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`;
@@ -234,19 +229,13 @@ requestAnimationFrame(raf);
 
 /* pointer handlers */
 function clearResume() {
-  if (resumeTimer) {
-    clearTimeout(resumeTimer);
-    resumeTimer = null;
-  }
+  if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
   isAccelerating = false;
   isDecelerating = false;
 }
 
 function onPointerDown(e) {
-  // hide overlay quickly if it's still visible
   if (overlay && !overlay.classList.contains('hidden')) hideOverlay();
-
-  // stop any resume/accel/decel in progress and immediately stop auto-motion
   clearResume();
   rotationSpeed = 0;
   isPointerDown = true;
@@ -254,37 +243,27 @@ function onPointerDown(e) {
   lastPointerTime = performance.now();
   lastDx = 0;
   lastDt = 0;
-
-  // cancel default behavior where appropriate
   if (e.cancelable) e.preventDefault();
-
-  // capture pointer
-  try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) {}
+  try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch(err){}
 }
 
 function onPointerMove(e) {
   if (!isPointerDown) return;
   const now = performance.now();
   const dx = e.clientX - lastPointerX;
-  const dt = Math.max(1, now - lastPointerTime) / 1000; // seconds
+  const dt = Math.max(1, now - lastPointerTime) / 1000;
   lastPointerX = e.clientX;
   lastPointerTime = now;
-
-  // track last motion for velocity calc
   lastDx = dx;
   lastDt = dt;
-
-  // rotate directly with pointer (no inertia while dragging) — LOWER sensitivity used here
   rotation += dx * dragDegPerPixel;
   box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`;
 }
 
 function startResumeTimer() {
-  // safety: clear existing before starting
   if (resumeTimer) clearTimeout(resumeTimer);
   resumeTimer = setTimeout(() => {
     resumeTimer = null;
-    // begin acceleration back to defaultSpeed
     isAccelerating = true;
     accelStartTs = performance.now();
   }, resumeDelayMs);
@@ -293,42 +272,31 @@ function startResumeTimer() {
 function onPointerUp(e) {
   if (!isPointerDown) return;
   isPointerDown = false;
-
-  // release pointer capture
-  try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) {}
-
-  // compute velocity from last measured dx/dt
-  const pxPerSec = (Math.abs(lastDt) < 1e-6) ? 0 : (lastDx / lastDt); // pixels/sec
-  const releasedSpeed = pxPerSec * dragDegPerPixel; // deg/sec consistent with drag mapping
+  try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch(err){}
+  const pxPerSec = (Math.abs(lastDt) < 1e-6) ? 0 : (lastDx / lastDt);
+  const releasedSpeed = pxPerSec * dragDegPerPixel; // deg/sec
 
   if (Math.abs(releasedSpeed) > 5) {
-    // user flicked — continue at that speed then decelerate to stop, then resume
     rotationSpeed = releasedSpeed;
     isDecelerating = true;
     isAccelerating = false;
-    // ensure any resume timer cleared (will be started after decel finishes)
     if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
   } else {
-    // no significant flick — remain stopped, then resume after delay
     rotationSpeed = 0;
     isDecelerating = false;
-    // start resume pause
     startResumeTimer();
   }
 }
 
-/* Attach pointer events */
+/* listeners */
 carouselWrap.addEventListener('pointerdown', onPointerDown, {passive: false});
 window.addEventListener('pointermove', onPointerMove, {passive: true});
 window.addEventListener('pointerup', onPointerUp, {passive: true});
 window.addEventListener('pointercancel', onPointerUp, {passive: true});
 
-/* Prevent touch page overscroll while interacting */
-box.addEventListener('touchmove', (e) => {
-  if (isPointerDown) e.preventDefault();
-}, {passive: false});
+box.addEventListener('touchmove', (e) => { if (isPointerDown) e.preventDefault(); }, {passive: false});
 
-/* overlay hide helpers */
+/* overlay helpers */
 let overlayTimer = setTimeout(hideOverlay, 5000);
 function hideOverlay() {
   if (!overlay || overlay.classList.contains('hidden')) return;
@@ -336,19 +304,15 @@ function hideOverlay() {
   overlayTimer && clearTimeout(overlayTimer);
   setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 400);
 }
-document.addEventListener('pointerdown', () => {
-  if (!overlay || overlay.classList.contains('hidden')) return;
-  hideOverlay();
-});
+document.addEventListener('pointerdown', () => { if (!overlay || overlay.classList.contains('hidden')) return; hideOverlay(); });
 handGif && handGif.addEventListener('click', (ev) => { ev.stopPropagation(); hideOverlay(); });
 
-/* keyboard arrows quick manual nudge */
+/* keyboard nudge */
 window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft') { rotation -= 10; box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`; }
   if (e.key === 'ArrowRight') { rotation += 10; box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`; }
 });
 
-/* responsive layout */
 window.addEventListener('resize', layoutItems);
 </script>
 </body>
