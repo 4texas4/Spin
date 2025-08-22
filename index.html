@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>3D Carousel — Images 200x300</title>
+<title>3D Carousel — 5 Items, Compact</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html,body { height:100%; }
@@ -19,19 +19,19 @@
   }
 
   .text-container {
-    padding: 30px 20px 0 20px;
+    padding: 20px 16px 0 16px; /* reduced padding to be more compact */
     text-align: center;
     z-index: 1000;
     pointer-events: none;
   }
 
-  .title { font-size: 2.2rem; font-weight: 700; color: #000; margin-bottom: 8px; text-shadow: 0 1px 0 #fff6; }
+  .title { font-size: 2rem; font-weight: 700; color: #000; margin-bottom: 6px; text-shadow: 0 1px 0 #fff6; }
   .subtitle {
-    font-size: 1rem; color: #000; max-width: 800px; margin: 0 auto 20px auto;
+    font-size: 0.95rem; color: #000; max-width: 760px; margin: 0 auto 14px auto;
     pointer-events: auto;
     background: rgba(255,255,255,0.65);
     display: inline-block;
-    padding: 8px 14px;
+    padding: 6px 12px;
     border-radius: 8px;
   }
 
@@ -43,17 +43,17 @@
     z-index: 1;
     position: relative;
     overflow: visible;
-    padding-bottom: 32px;
+    padding-bottom: 12px; /* much less empty space */
   }
 
-  /* box is now sized to match the 200x300 images plus extra room (340px height) */
+  /* box sized to match 200x300 images with reduced extra height (compact) */
   .box {
     position: relative;
     width: 200px;      /* matches image width exactly */
-    height: 340px;     /* a little taller so images have breathing room */
+    height: 320px;     /* slightly less than before for compactness */
     transform-style: preserve-3d;
     will-change: transform;
-    touch-action: pan-y; /* allow vertical page scroll */
+    touch-action: pan-y;
     user-select: none;
     -ms-touch-action: pan-y;
   }
@@ -69,7 +69,7 @@
     transform-origin: center;
     transform-style: preserve-3d;
     -webkit-box-reflect: below 0px linear-gradient(transparent, transparent, transparent, #0004);
-    transition: transform 300ms linear;
+    transition: transform 260ms linear;
   }
 
   /* IMAGES are exactly 200x300 — transparency preserved */
@@ -77,8 +77,8 @@
     width: 200px;
     height: 300px;
     object-fit: cover;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    border-radius: 8px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.28);
     background: transparent;
     display: block;
     -webkit-user-drag: none;
@@ -94,29 +94,29 @@
     justify-content:center;
     z-index: 2000;
     pointer-events: auto;
-    background: linear-gradient(transparent, rgba(0,0,0,0.06));
+    background: linear-gradient(transparent, rgba(0,0,0,0.04));
   }
 
   .overlay .hand {
-    width: 160px;
-    height: 160px;
+    width: 140px;
+    height: 140px;
     display:block;
     cursor: pointer;
     user-select: none;
     -webkit-user-drag: none;
-    filter: invert(1) drop-shadow(0 6px 18px rgba(0,0,0,0.35));
+    filter: invert(1) drop-shadow(0 6px 12px rgba(0,0,0,0.28));
     transform: translateY(0);
-    transition: opacity 250ms ease, transform 250ms ease;
+    transition: opacity 220ms ease, transform 220ms ease;
   }
 
   .overlay.hidden { opacity: 0; pointer-events: none; transform: translateZ(0); }
 
   @media (max-width: 420px) {
-    .title { font-size: 1.6rem; }
-    .subtitle { font-size: 0.9rem; }
-    .box { width: 160px; height: 280px; } /* scale down on tiny screens */
+    .title { font-size: 1.5rem; }
+    .subtitle { font-size: 0.85rem; }
+    .box { width: 160px; height: 260px; }
     .box span img { width: 160px; height: 240px; }
-    .overlay .hand { width: 120px; height: 120px; }
+    .overlay .hand { width: 110px; height: 110px; }
   }
 </style>
 </head>
@@ -134,35 +134,32 @@
       <img src="hand.gif" alt="Swipe hint" class="hand" id="handGif" />
     </div>
 
+    <!-- 5 items total (removed 3 placeholders) -->
     <div class="box" id="box">
       <span style="--i:0;"><img src="2liter.png" alt="item 1"></span>
       <span style="--i:1;"><img src="Soda.png" alt="item 2"></span>
       <span style="--i:2;"><img src="refill.png" alt="item 3"></span>
-      <span style="--i:3;"><img src="idk.png" alt="item 4"></span>
-      <span style="--i:4;"><img src="idk.png" alt="item 5"></span>
-      <span style="--i:5;"><img src="idk.png" alt="item 6"></span>
-      <span style="--i:6;"><img src="idk.png" alt="item 7"></span>
-      <span style="--i:7;"><img src="idk.png" alt="item 8"></span>
+      <span style="--i:3;"><img src="idk" alt="item 4"></span>
+      <span style="--i:4;"><img src="idk" alt="item 5"></span>
     </div>
   </div>
 
 <script>
 /*
- Behavior retained:
- - Hold: follow pointer (rotation stops auto).
- - Release while moving: continue at released speed, decelerate to stop, wait 1.5s, then accelerate to auto.
- - Release without moving: stay stopped, wait 1.5s, then accelerate to auto.
- - Sensitivity remains lowered (0.32 deg/pixel).
+ Compact 5-item carousel.
+ - Images are exactly 200x300 (kept).
+ - More compact layout by reducing radius and box height.
+ - All behavior retained: hold -> follow, release moving -> decel -> wait 1.5s -> accel to auto.
 */
 
 const defaultFullRotationSeconds = 20; // 360deg in this many seconds
 const defaultSpeed = 360 / defaultFullRotationSeconds; // deg/sec
-const radiusZ = 420;
-const dragDegPerPixel = 0.32;       // LOWERED sensitivity you already picked
-const resumeDelayMs = 1500;        // 1.5 seconds wait before resuming auto-rotation
-const decelRate = 3.5;             // exponential decay rate (higher = faster decel)
-const stopThreshold = 0.6;         // deg/sec considered "stopped"
-const accelDurationMs = 900;       // time to accelerate from 0 to defaultSpeed when resuming
+const radiusZ = 320;               // TIGHTER radius for compactness (was 420)
+const dragDegPerPixel = 0.32;      // lowered sensitivity
+const resumeDelayMs = 1500;        // 1.5s
+const decelRate = 3.5;
+const stopThreshold = 0.6;
+const accelDurationMs = 900;
 
 /* DOM */
 const box = document.getElementById('box');
@@ -170,7 +167,7 @@ const carouselWrap = document.getElementById('carouselWrap');
 const overlay = document.getElementById('overlay');
 const handGif = document.getElementById('handGif');
 
-/* layout: positions items in 3D ring */
+/* layout: positions items around circle using current span count (now 5) */
 function layoutItems() {
   const spans = box.querySelectorAll('span');
   const count = spans.length;
@@ -182,7 +179,7 @@ function layoutItems() {
 }
 layoutItems();
 
-/* STATE */
+/* state */
 let rotation = 0;
 let rotationSpeed = defaultSpeed;
 let lastFrameTs = null;
@@ -196,7 +193,7 @@ let isDecelerating = false;
 let isAccelerating = false;
 let accelStartTs = 0;
 
-/* RAF loop */
+/* main RAF */
 function raf(ts) {
   if (!lastFrameTs) lastFrameTs = ts;
   const dt = (ts - lastFrameTs) / 1000;
@@ -293,7 +290,6 @@ carouselWrap.addEventListener('pointerdown', onPointerDown, {passive: false});
 window.addEventListener('pointermove', onPointerMove, {passive: true});
 window.addEventListener('pointerup', onPointerUp, {passive: true});
 window.addEventListener('pointercancel', onPointerUp, {passive: true});
-
 box.addEventListener('touchmove', (e) => { if (isPointerDown) e.preventDefault(); }, {passive: false});
 
 /* overlay helpers */
@@ -302,7 +298,7 @@ function hideOverlay() {
   if (!overlay || overlay.classList.contains('hidden')) return;
   overlay.classList.add('hidden');
   overlayTimer && clearTimeout(overlayTimer);
-  setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 400);
+  setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 320);
 }
 document.addEventListener('pointerdown', () => { if (!overlay || overlay.classList.contains('hidden')) return; hideOverlay(); });
 handGif && handGif.addEventListener('click', (ev) => { ev.stopPropagation(); hideOverlay(); });
