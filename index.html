@@ -1,91 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Rotating 3D Image Carousel</title>
+<title>3D Carousel — Lower Sensitivity</title>
 <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html,body { height:100%; }
   body {
     min-height: 100vh;
-    background: url('../img/pexels-eberhard-grossgasteiger-1421903.jpg');
-    background-size: cover;
+    background: url('../img/pexels-eberhard-grossgasteiger-1421903.jpg') center/cover fixed no-repeat;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     display: flex;
     flex-direction: column;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow: hidden;
   }
 
   .text-container {
     padding: 30px 20px 0 20px;
     text-align: center;
     z-index: 1000;
+    pointer-events: none;
   }
 
-  .title {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #000;
-    margin-bottom: 8px;
-  }
-
+  .title { font-size: 2.2rem; font-weight: 700; color: #000; margin-bottom: 8px; text-shadow: 0 1px 0 #fff6; }
   .subtitle {
-    font-size: 1rem;
-    color: #000;
-    max-width: 600px;
-    margin: 0 auto 20px auto;
+    font-size: 1rem; color: #000; max-width: 800px; margin: 0 auto 20px auto;
+    pointer-events: auto;
+    background: rgba(255,255,255,0.65);
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
   }
 
   .carousel-container {
-    flex: 1; /* take remaining space */
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1;
+    position: relative;
+    overflow: visible;
+    padding-bottom: 32px;
   }
 
   .box {
     position: relative;
-    width: 200px;
-    height: 300px;
+    width: 260px;
+    height: 360px;
     transform-style: preserve-3d;
-    animation: animate 20s linear infinite;
-  }
-
-  @keyframes animate {
-    0% { transform: perspective(1000px) rotateY(0deg); }
-    100% { transform: perspective(1000px) rotateY(360deg); }
+    will-change: transform;
+    touch-action: pan-y; /* allow vertical page scroll */
+    user-select: none;
+    -ms-touch-action: pan-y;
   }
 
   .box span {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     transform-origin: center;
     transform-style: preserve-3d;
-    transform: rotateY(calc(var(--i) * 45deg)) translateZ(400px);
     -webkit-box-reflect: below 0px linear-gradient(transparent, transparent, transparent, #0004);
+    transition: transform 300ms linear;
   }
 
   .box span img {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    background: transparent; /* preserve PNG transparency */
   }
 
-  /* Small screens adjustments */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index: 2000;
+    pointer-events: auto;
+    background: linear-gradient(transparent, rgba(0,0,0,0.06));
+  }
+
+  .overlay .hand {
+    width: 160px;
+    height: 160px;
+    display:block;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: invert(1) drop-shadow(0 6px 18px rgba(0,0,0,0.35));
+    transform: translateY(0);
+    transition: opacity 250ms ease, transform 250ms ease;
+  }
+
+  .overlay.hidden { opacity: 0; pointer-events: none; transform: translateZ(0); }
+
   @media (max-width: 420px) {
     .title { font-size: 1.6rem; }
     .subtitle { font-size: 0.9rem; }
+    .box { width: 200px; height: 280px; }
+    .overlay .hand { width: 120px; height: 120px; }
   }
 </style>
 </head>
@@ -93,22 +114,242 @@
   <div class="text-container">
     <div class="title">Welcome To The Shop.</div>
     <div class="subtitle">
-      We are located at locker E207. Call Us At 435-232-1431 or 435-265-2672. 
-      The better version of Ala-Kart, better options, cheaper food, and pay with cash.
+      We are located at locker E207. Call Us At 435-232-1431 or 435-265-2672.
+      The better version of Ala-Kart — better options, cheaper food, and pay with cash.
     </div>
   </div>
 
-  <div class="carousel-container">
-    <div class="box">
-      <span style="--i:1;"><img src="2liter.png" alt=""></span>
-      <span style="--i:2;"><img src="Soda.png" alt=""></span>
-      <span style="--i:3;"><img src="refill.png" alt=""></span>
-      <span style="--i:4;"><img src="idk" alt=""></span>
-      <span style="--i:5;"><img src="idk" alt=""></span>
-      <span style="--i:6;"><img src="idk" alt=""></span>
-      <span style="--i:7;"><img src="idk" alt=""></span>
-      <span style="--i:8;"><img src="idk" alt=""></span>
+  <div class="carousel-container" id="carouselWrap">
+    <div class="overlay" id="overlay">
+      <img src="hand.gif" alt="Swipe hint" class="hand" id="handGif" />
+    </div>
+
+    <div class="box" id="box">
+      <span style="--i:0;"><img src="2liter.png" alt="item 1"></span>
+      <span style="--i:1;"><img src="Soda.png" alt="item 2"></span>
+      <span style="--i:2;"><img src="refill.png" alt="item 3"></span>
+      <span style="--i:3;"><img src="idk.png" alt="item 4"></span>
+      <span style="--i:4;"><img src="idk.png" alt="item 5"></span>
+      <span style="--i:5;"><img src="idk.png" alt="item 6"></span>
+      <span style="--i:6;"><img src="idk.png" alt="item 7"></span>
+      <span style="--i:7;"><img src="idk.png" alt="item 8"></span>
     </div>
   </div>
+
+<script>
+/*
+ Behavior:
+ - Hold: follow pointer (rotation stops auto).
+ - Release while moving: keep release speed, decelerate to stop, wait 1.5s, then accelerate back to auto-rotation.
+ - Release without moving: stay stopped, wait 1.5s, then accelerate back to auto-rotation.
+ - Any pointerdown cancels timers/accel and returns control immediately.
+*/
+
+/* CONFIG */
+const defaultFullRotationSeconds = 20; // 360deg in this many seconds
+const defaultSpeed = 360 / defaultFullRotationSeconds; // deg/sec
+const radiusZ = 420;
+
+// LOWERED SENSITIVITY: degrees rotated per pixel of pointer movement while dragging.
+// Previously 0.6 — lowered to 0.32 so swipes are noticeably less sensitive.
+const dragDegPerPixel = 0.32;
+
+const resumeDelayMs = 1500;        // 1.5 seconds wait before resuming auto-rotation
+const decelRate = 3.5;             // exponential decay rate (higher = faster decel)
+const stopThreshold = 0.6;         // deg/sec considered "stopped"
+const accelDurationMs = 900;       // time to accelerate from 0 to defaultSpeed when resuming
+
+/* DOM */
+const box = document.getElementById('box');
+const carouselWrap = document.getElementById('carouselWrap');
+const overlay = document.getElementById('overlay');
+const handGif = document.getElementById('handGif');
+
+/* layout */
+function layoutItems() {
+  const spans = box.querySelectorAll('span');
+  const count = spans.length;
+  const step = 360 / count;
+  spans.forEach((el, idx) => {
+    const ang = idx * step;
+    el.style.transform = `rotateY(${ang}deg) translateZ(${radiusZ}px)`;
+  });
+}
+layoutItems();
+
+/* STATE */
+let rotation = 0;
+let rotationSpeed = defaultSpeed;  // deg/sec (auto-rotation when >0)
+let lastFrameTs = null;
+
+let isPointerDown = false;
+let lastPointerX = 0;
+let lastPointerTime = 0;
+let lastDx = 0;
+let lastDt = 0;
+
+let resumeTimer = null;
+let isDecelerating = false;
+let isAccelerating = false;
+let accelStartTs = 0;
+
+/* RAF loop */
+function raf(ts) {
+  if (!lastFrameTs) lastFrameTs = ts;
+  const dt = (ts - lastFrameTs) / 1000;
+  lastFrameTs = ts;
+
+  // handle deceleration (after releasing with velocity)
+  if (isDecelerating && !isPointerDown) {
+    // exponential decay toward 0
+    rotationSpeed *= Math.exp(-decelRate * dt);
+    // if nearly stopped, finish decel
+    if (Math.abs(rotationSpeed) <= stopThreshold) {
+      rotationSpeed = 0;
+      isDecelerating = false;
+      startResumeTimer();
+    }
+  }
+
+  // handle acceleration towards defaultSpeed (after resume delay)
+  if (isAccelerating && !isPointerDown) {
+    const elapsed = ts - accelStartTs;
+    const t = Math.min(1, elapsed / accelDurationMs);
+    // smooth ease (easeOut-ish)
+    const ease = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
+    rotationSpeed = defaultSpeed * ease;
+    if (t >= 1) {
+      isAccelerating = false;
+    }
+  }
+
+  // integrate rotation
+  rotation += rotationSpeed * dt;
+  rotation %= 360;
+  box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`;
+
+  requestAnimationFrame(raf);
+}
+requestAnimationFrame(raf);
+
+/* pointer handlers */
+function clearResume() {
+  if (resumeTimer) {
+    clearTimeout(resumeTimer);
+    resumeTimer = null;
+  }
+  isAccelerating = false;
+  isDecelerating = false;
+}
+
+function onPointerDown(e) {
+  // hide overlay quickly if it's still visible
+  if (overlay && !overlay.classList.contains('hidden')) hideOverlay();
+
+  // stop any resume/accel/decel in progress and immediately stop auto-motion
+  clearResume();
+  rotationSpeed = 0;
+  isPointerDown = true;
+  lastPointerX = e.clientX;
+  lastPointerTime = performance.now();
+  lastDx = 0;
+  lastDt = 0;
+
+  // cancel default behavior where appropriate
+  if (e.cancelable) e.preventDefault();
+
+  // capture pointer
+  try { e.target.setPointerCapture && e.target.setPointerCapture(e.pointerId); } catch (err) {}
+}
+
+function onPointerMove(e) {
+  if (!isPointerDown) return;
+  const now = performance.now();
+  const dx = e.clientX - lastPointerX;
+  const dt = Math.max(1, now - lastPointerTime) / 1000; // seconds
+  lastPointerX = e.clientX;
+  lastPointerTime = now;
+
+  // track last motion for velocity calc
+  lastDx = dx;
+  lastDt = dt;
+
+  // rotate directly with pointer (no inertia while dragging) — LOWER sensitivity used here
+  rotation += dx * dragDegPerPixel;
+  box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`;
+}
+
+function startResumeTimer() {
+  // safety: clear existing before starting
+  if (resumeTimer) clearTimeout(resumeTimer);
+  resumeTimer = setTimeout(() => {
+    resumeTimer = null;
+    // begin acceleration back to defaultSpeed
+    isAccelerating = true;
+    accelStartTs = performance.now();
+  }, resumeDelayMs);
+}
+
+function onPointerUp(e) {
+  if (!isPointerDown) return;
+  isPointerDown = false;
+
+  // release pointer capture
+  try { e.target.releasePointerCapture && e.target.releasePointerCapture(e.pointerId); } catch (err) {}
+
+  // compute velocity from last measured dx/dt
+  const pxPerSec = (Math.abs(lastDt) < 1e-6) ? 0 : (lastDx / lastDt); // pixels/sec
+  const releasedSpeed = pxPerSec * dragDegPerPixel; // deg/sec consistent with drag mapping
+
+  if (Math.abs(releasedSpeed) > 5) {
+    // user flicked — continue at that speed then decelerate to stop, then resume
+    rotationSpeed = releasedSpeed;
+    isDecelerating = true;
+    isAccelerating = false;
+    // ensure any resume timer cleared (will be started after decel finishes)
+    if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+  } else {
+    // no significant flick — remain stopped, then resume after delay
+    rotationSpeed = 0;
+    isDecelerating = false;
+    // start resume pause
+    startResumeTimer();
+  }
+}
+
+/* Attach pointer events */
+carouselWrap.addEventListener('pointerdown', onPointerDown, {passive: false});
+window.addEventListener('pointermove', onPointerMove, {passive: true});
+window.addEventListener('pointerup', onPointerUp, {passive: true});
+window.addEventListener('pointercancel', onPointerUp, {passive: true});
+
+/* Prevent touch page overscroll while interacting */
+box.addEventListener('touchmove', (e) => {
+  if (isPointerDown) e.preventDefault();
+}, {passive: false});
+
+/* overlay hide helpers */
+let overlayTimer = setTimeout(hideOverlay, 5000);
+function hideOverlay() {
+  if (!overlay || overlay.classList.contains('hidden')) return;
+  overlay.classList.add('hidden');
+  overlayTimer && clearTimeout(overlayTimer);
+  setTimeout(() => { if (overlay) overlay.style.display = 'none'; }, 400);
+}
+document.addEventListener('pointerdown', () => {
+  if (!overlay || overlay.classList.contains('hidden')) return;
+  hideOverlay();
+});
+handGif && handGif.addEventListener('click', (ev) => { ev.stopPropagation(); hideOverlay(); });
+
+/* keyboard arrows quick manual nudge */
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') { rotation -= 10; box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`; }
+  if (e.key === 'ArrowRight') { rotation += 10; box.style.transform = `perspective(1000px) rotateY(${rotation}deg)`; }
+});
+
+/* responsive layout */
+window.addEventListener('resize', layoutItems);
+</script>
 </body>
 </html>
