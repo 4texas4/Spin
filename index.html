@@ -10,41 +10,42 @@
     padding: 0;
     box-sizing: border-box;
   }
+
   body {
-    display: flex;
-    flex-direction: column; /* stacked so title appears above carousel */
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
     background: url('../img/pexels-eberhard-grossgasteiger-1421903.jpg');
     background-size: cover;
-    gap: 8px; /* small space between title and carousel */
-    padding: 24px; /* safe spacing on small screens */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Title styles */
+  .text-container {
+    padding: 30px 20px 0 20px;
+    text-align: center;
+    z-index: 1000;
+  }
+
   .title {
-    position: relative;
-    z-index: 1000; /* keep it above the carousel */
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     font-size: 2.2rem;
     font-weight: 700;
-    color: #000; /* black text as requested */
-    text-align: center;
-    line-height: 1.05;
-    margin-bottom: 22px; /* push carousel down so title sits higher */
-    transform: translateY(-4px); /* tiny upward nudge */
+    color: #000;
+    margin-bottom: 8px;
   }
 
   .subtitle {
-    position: relative;
-    z-index: 1000;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     font-size: 1rem;
-    color: #000; /* black text */
-    text-align: center;
-    margin-top: 4px;
-    margin-bottom: 18px; /* extra space before carousel */
+    color: #000;
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+  }
+
+  .carousel-container {
+    flex: 1; /* take remaining space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
   }
 
   .box {
@@ -53,16 +54,13 @@
     height: 300px;
     transform-style: preserve-3d;
     animation: animate 20s linear infinite;
-    z-index: 1; /* keep carousel under the title */
   }
+
   @keyframes animate {
-    0% {
-      transform: perspective(1000px) rotateY(0deg);
-    }
-    100% {
-      transform: perspective(1000px) rotateY(360deg);
-    }
+    0% { transform: perspective(1000px) rotateY(0deg); }
+    100% { transform: perspective(1000px) rotateY(360deg); }
   }
+
   .box span {
     position: absolute;
     top: 0;
@@ -74,6 +72,7 @@
     transform: rotateY(calc(var(--i) * 45deg)) translateZ(400px);
     -webkit-box-reflect: below 0px linear-gradient(transparent, transparent, transparent, #0004);
   }
+
   .box span img {
     position: absolute;
     top: 0;
@@ -83,32 +82,33 @@
     object-fit: cover;
   }
 
-  /* Make sure the title doesn't blow up on tiny screens */
+  /* Small screens adjustments */
   @media (max-width: 420px) {
-    .title {
-      font-size: 1.6rem;
-      margin-bottom: 14px;
-    }
-    .subtitle {
-      font-size: 0.9rem;
-      margin-bottom: 12px;
-    }
+    .title { font-size: 1.6rem; }
+    .subtitle { font-size: 0.9rem; }
   }
 </style>
 </head>
 <body>
-  <div class="title">Welcome To The Shop.</div>
-  <div class="subtitle">We are located at locker E207. Call Us At 435-232-1431 or 435-265-2672. The better version of Ala-Kart, better options, cheaper food, and pay with cash.</div>
+  <div class="text-container">
+    <div class="title">Welcome To The Shop.</div>
+    <div class="subtitle">
+      We are located at locker E207. Call Us At 435-232-1431 or 435-265-2672. 
+      The better version of Ala-Kart, better options, cheaper food, and pay with cash.
+    </div>
+  </div>
 
-  <div class="box">
-    <span style="--i:1;"><img src="2liter.png" alt=""></span>
-    <span style="--i:2;"><img src="idk" alt=""></span>
-    <span style="--i:3;"><img src="idk" alt=""></span>
-    <span style="--i:4;"><img src="idk" alt=""></span>
-    <span style="--i:6;"><img src="idk" alt=""></span>
-    <span style="--i:7;"><img src="idk" alt=""></span>
-    <span style="--i:5;"><img src="idk" alt=""></span>
-    <span style="--i:8;"><img src="idk" alt=""></span>
+  <div class="carousel-container">
+    <div class="box">
+      <span style="--i:1;"><img src="2liter.png" alt=""></span>
+      <span style="--i:2;"><img src="Soda.png" alt=""></span>
+      <span style="--i:3;"><img src="refill.png" alt=""></span>
+      <span style="--i:4;"><img src="idk" alt=""></span>
+      <span style="--i:5;"><img src="idk" alt=""></span>
+      <span style="--i:6;"><img src="idk" alt=""></span>
+      <span style="--i:7;"><img src="idk" alt=""></span>
+      <span style="--i:8;"><img src="idk" alt=""></span>
+    </div>
   </div>
 </body>
 </html>
